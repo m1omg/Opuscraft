@@ -7,6 +7,7 @@ import { MainMenu, type SkirmishConfig } from './ui/menus';
 import { MISSIONS } from './campaign/missions';
 import type { FactionId } from './data/types';
 import type { GameSetup } from './sim/world';
+import { DEFS } from './data/registry';
 
 const errs = validateData();
 if (errs.length) console.error('Data errors', errs);
@@ -187,6 +188,42 @@ if (params.has('quick') || params.has('spectate')) {
     session.world.events.length = 0;
   }
   if (params.has('reveal')) session.world.players[0].revealAll = true;
+  session.start();
+  (window as unknown as { game: GameSession }).game = session;
+} else if (params.has('gallery')) {
+  // debug: show every model of a faction in rows
+  const fac = params.get('gallery') || 'crown';
+  const map = presetMap('ashkar');
+  const setup: GameSetup = {
+    map,
+    seed: 1,
+    fog: false,
+    noStartBases: true,
+    noCreeps: true,
+    script: { customVictory: true },
+    players: [{ name: 'You', faction: (fac === 'neutral' ? 'crown' : fac) as FactionId, color: 1, team: 0, ai: false, difficulty: 'normal', start: 0 }, { name: 'B', faction: 'iron', color: 0, team: 1, ai: false, difficulty: 'normal', start: 1 }],
+  };
+  session = new GameSession(app, { setup, local: 0, settings, audio, title: 'Gallery', onExit: () => showMenu() });
+  const w = session.world;
+  // clear neutral buildings / units around the showcase area
+  for (const e of w.entities) if (e.owner !== 0 && Math.abs(e.x - map.w / 2) < 22 && Math.abs(e.y - map.h / 2) < 16 && !e.def.goldMine) w.removeEntity(e);
+  const defs = Object.values(DEFS).filter((d) => d.faction === fac && (params.has('b') ? d.kind === 'building' : d.kind === 'unit'));
+  const cx = map.w / 2;
+  const cy = map.h / 2;
+  const cols = params.has('b') ? 5 : 7;
+  defs.forEach((d, i) => {
+    const x = cx - 12 + (i % cols) * (params.has('b') ? 6 : 3.4);
+    const y = cy - 6 + Math.floor(i / cols) * (params.has('b') ? 6 : 3.6);
+    if (d.kind === 'building') {
+      for (let ty = Math.floor(y - 3); ty < y + 3; ty++) for (let tx = Math.floor(x - 3); tx < x + 3; tx++) { const t = w.map.treeAt[w.map.idx(tx, ty)]; if (t >= 0) w.map.removeTree(t); }
+      w.spawnBuilding(d.id, 0, Math.round(x - (d.size ?? 2) / 2), Math.round(y - (d.size ?? 2) / 2), true);
+    } else {
+      const u = w.spawnUnit(d.id, 0, x, y, Math.PI / 2 + 0.6);
+      u.lifetime = 0;
+    }
+  });
+  session.renderer.camera.lookAt(cx, cy + 2);
+  session.renderer.camera.setZoom(Number(params.get('z') || 26));
   session.start();
   (window as unknown as { game: GameSession }).game = session;
 } else if (params.has('mission')) {

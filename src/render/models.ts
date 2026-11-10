@@ -979,7 +979,7 @@ function goldMine(tb: TB): void {
 const FAC = {
   crown: { stone: 0xd8d0c0, stone2: 0xb8b0a0, roof: 0x3d5a8a, trim: 0xd4a843, wood: 0x8a6a45 },
   iron: { stone: 0x7a6a5a, stone2: 0x5a4a3a, roof: 0x9a6a4a, trim: 0xe8dcc0, wood: 0x6b4a2f },
-  sepulchral: { stone: 0x3a3640, stone2: 0x2a2630, roof: 0x4a4054, trim: 0xd9d2bf, wood: 0x3a3030 },
+  sepulchral: { stone: 0x4e4858, stone2: 0x3a3544, roof: 0x5e5070, trim: 0xd9d2bf, wood: 0x4a3c3c },
   twilight: { stone: 0xcfd8e8, stone2: 0x9aa0c0, roof: 0x2f6b4f, trim: 0xb98cff, wood: 0x5b4636 },
   neutral: { stone: 0xb0a490, stone2: 0x8a7e6a, roof: 0x8a4a2a, trim: 0xd4a843, wood: 0x7a5a3a },
 };

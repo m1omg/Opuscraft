@@ -1,2 +1,4 @@
 import * as esbuild from 'esbuild';
-await esbuild.build({ entryPoints: ['tests/debug.ts'], bundle: true, platform: 'node', format: 'esm', outfile: 'dist-tests/debug.js', logLevel: 'warning' });
+const entry = process.argv[2] || 'tests/debug.ts';
+const out = 'dist-tests/' + entry.split('/').pop().replace('.ts', '.js');
+await esbuild.build({ entryPoints: [entry], bundle: true, platform: 'node', format: 'esm', outfile: out, logLevel: 'warning' });

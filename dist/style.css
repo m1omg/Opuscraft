@@ -82,13 +82,14 @@ button { font-family: var(--ui); }
 .minimap-wrap { width: 216px; height: 216px; background: var(--panel); border: 2px solid var(--edge); border-radius: 10px; padding: 6px; flex: none; position: relative; }
 .minimap-wrap canvas { width: 200px; height: 200px; display: block; cursor: pointer; image-rendering: auto; }
 .minimap-btns { position: absolute; top: -30px; left: 0; display: flex; gap: 4px; }
-.info { flex: 1; max-width: 640px; height: 176px; background: var(--panel); border: 2px solid var(--edge); border-radius: 10px; display: flex; padding: 8px; gap: 10px; position: relative; align-self: flex-end; }
+.info { flex: 1; max-width: 640px; height: 184px; background: var(--panel); border: 2px solid var(--edge); border-radius: 10px; display: flex; padding: 8px; gap: 10px; position: relative; align-self: flex-end; }
 .info.empty { opacity: 0.85; }
 .portrait { width: 112px; height: 132px; flex: none; border: 1px solid #3a3a46; border-radius: 6px; background: radial-gradient(circle at 50% 35%, #3a4058, #10121a); overflow: hidden; position: relative; }
 .portrait img { width: 112px; height: 112px; display: block; }
 .portrait .pname { position: absolute; bottom: 0; left: 0; right: 0; font-size: 11px; text-align: center; color: var(--muted); padding: 2px; background: rgba(0,0,0,0.5); }
-.stats { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.stats h3 { margin: 0; font-family: var(--title); font-size: 17px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stats { flex: 1; display: flex; flex-direction: column; gap: 3px; min-width: 0; overflow: hidden; }
+.stats > * { flex-shrink: 0; }
+.stats h3 { margin: 0; font-family: var(--title); font-size: 17px; line-height: 1.25; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stats .sub { font-size: 12px; color: var(--muted); margin-top: -3px; }
 .hpline { font-size: 12px; font-variant-numeric: tabular-nums; display: flex; gap: 10px; }
 .hpline .hp { color: var(--good); }
@@ -116,11 +117,11 @@ button { font-family: var(--ui); }
 .mcell.active { border-color: var(--edge2); box-shadow: 0 0 6px rgba(232,197,106,0.6); }
 .mcell img { width: 50px; height: 46px; display: block; }
 .mcell .bar { position: absolute; left: 2px; right: 2px; bottom: 2px; height: 4px; margin: 0; }
-.queue { display: flex; gap: 5px; margin-top: 6px; align-items: center; }
-.qslot { width: 40px; height: 40px; border: 1px solid #3a3a46; border-radius: 5px; overflow: hidden; position: relative; cursor: pointer; background: #0c0d12; }
-.qslot img { width: 38px; height: 38px; }
-.qslot.first { width: 48px; height: 48px; }
-.qslot.first img { width: 46px; height: 46px; }
+.queue { display: flex; gap: 5px; margin-top: 3px; align-items: center; }
+.qslot { width: 34px; height: 34px; border: 1px solid #3a3a46; border-radius: 5px; overflow: hidden; position: relative; cursor: pointer; background: #0c0d12; }
+.qslot img { width: 32px; height: 32px; }
+.qslot.first { width: 40px; height: 40px; }
+.qslot.first img { width: 38px; height: 38px; }
 .qprog { flex: 1; height: 10px; background: #000a; border: 1px solid #333; border-radius: 5px; overflow: hidden; max-width: 180px; }
 .qprog > div { height: 100%; background: linear-gradient(90deg, #c9a85a, #ffe08a); }
 .cmdcard { width: 296px; height: 222px; background: var(--panel); border: 2px solid var(--edge); border-radius: 10px; padding: 8px; display: grid; grid-template-columns: repeat(4, 64px); grid-template-rows: repeat(3, 64px); gap: 6px; flex: none; }

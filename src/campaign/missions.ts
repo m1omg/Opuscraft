@@ -300,7 +300,7 @@ class ShardRoadScript extends Script {
 class HungerScript extends Script {
   private readonly length = 660;
   private wave = 0;
-  private nextWave = 75;
+  private nextWave = 90;
   private startT = 0;
   start(): void {
     const w = this.w;
@@ -324,7 +324,7 @@ class HungerScript extends Script {
     if (Math.floor(left) % 60 === 0 && Math.floor(left) > 0 && w.tick % 20 === 0) this.say('Shaman Ruuk', `${Math.floor(left / 60)} minute${left >= 120 ? 's' : ''} until the war host arrives.`, 4);
     if (t >= this.nextWave && left > 20) {
       this.wave++;
-      this.nextWave = t + Math.max(45, 80 - this.wave * 4);
+      this.nextWave = t + Math.max(55, 85 - this.wave * 3);
       this.launchWave();
     }
     if (left <= 0) {
@@ -348,13 +348,13 @@ class HungerScript extends Script {
     const n = this.wave;
     const comp: [string, number][] = [
       ['sep_skeleton', 2 + n],
-      ['sep_gravedigger', 1 + Math.floor(n / 2)],
-      ['sep_archer', Math.floor(n / 2)],
+      ['sep_gravedigger', Math.floor((n + 1) / 2)],
+      ['sep_archer', Math.floor(n / 3)],
     ];
-    if (n >= 4) comp.push(['sep_rider', Math.floor((n - 2) / 2)]);
+    if (n >= 4) comp.push(['sep_rider', Math.floor((n - 2) / 3)]);
     if (n >= 5) comp.push(['sep_necro', 1]);
-    if (n >= 6) comp.push(['sep_colossus', Math.floor((n - 4) / 2)]);
-    if (n >= 7) comp.push(['sep_rotwing', 2]);
+    if (n >= 7) comp.push(['sep_colossus', 1]);
+    if (n >= 8) comp.push(['sep_rotwing', 2]);
     const all: Entity[] = [];
     for (const [id, c] of comp) all.push(...this.spawn(id, 1, s1.x, s1.y + 8, c));
     for (const u of all) if (u.def.id === 'sep_skeleton') u.lifetime = 0;
