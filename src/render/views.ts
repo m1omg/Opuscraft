@@ -161,8 +161,8 @@ export class EntityViews {
         continue;
       }
       if (!v) v = this.create(e);
-      // model changed (transform / upgrade)
-      if (v.defId !== e.def.id && e.kind !== 'item') {
+      // model changed (transform / upgrade / new owner)
+      if ((v.defId !== e.def.id || v.team !== this.teamColor(e.owner)) && e.kind !== 'item') {
         this.destroy(v);
         v = this.create(e);
       }

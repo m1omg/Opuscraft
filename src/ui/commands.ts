@@ -271,7 +271,10 @@ function buildMenu(ctx: UICtx, worker: Entity, advanced: boolean): CmdButton[] {
   const w = ctx.world;
   const p = w.players[ctx.local];
   const faction = worker.def.faction;
-  const list = Object.values(DEFS).filter((d) => d.kind === 'building' && d.faction === faction && d.buildable !== false && !!d.advanced === advanced);
+  const rank = (d: EntityDef) => (d.foodProvided && !d.mainHall ? 0 : d.mainHall ? 9 : d.isAltar ? 3 : d.weapon || d.upgradeOptions ? 5 : d.trains?.length ? 1 : d.dropoff ? 2 : 4);
+  const list = Object.values(DEFS)
+    .filter((d) => d.kind === 'building' && d.faction === faction && d.buildable !== false && !!d.advanced === advanced)
+    .sort((a, b) => rank(a) - rank(b));
   const out: CmdButton[] = [];
   list.slice(0, 11).forEach((d, i) => {
     const req = w.requirementsMet(ctx.local, d.requires);

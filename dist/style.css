@@ -184,7 +184,7 @@ label { font-size: 13px; color: var(--muted); }
 .skirmish { width: min(980px, 96vw); }
 .sk-grid { display: grid; grid-template-columns: 300px 1fr; gap: 22px; }
 .maplist { display: flex; flex-direction: column; gap: 6px; }
-.mapitem { padding: 8px 10px; border: 1px solid #3a3a48; border-radius: 8px; cursor: pointer; background: #14161f; }
+.mapitem { padding: 6px 10px; border: 1px solid #3a3a48; border-radius: 8px; cursor: pointer; background: #14161f; }
 .mapitem.sel { border-color: var(--edge2); background: #22232f; }
 .mapitem .mn { font-weight: 700; font-size: 14px; }
 .mapitem .md { font-size: 11px; color: var(--muted); }

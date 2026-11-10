@@ -306,6 +306,8 @@ export class Hud {
         if (e) this.message(e.def.name + ' construction complete', 'good');
       } else if (ev.t === 'heroDied' && ev.owner === local) this.message('Your hero has fallen! Revive them at an altar.', 'warn');
       else if (ev.t === 'playerDefeated' && ev.owner !== local) this.message(w.players[ev.owner].name + ' has been defeated', 'info');
+      else if (ev.t === 'dialogue') this.queueDialogue(ev.speaker, ev.text, ev.duration ?? 7);
+      else if (ev.t === 'objective') this.setObjective(ev.id, ev.text, !!ev.done, !!ev.failed);
     }
   }
 
@@ -322,6 +324,7 @@ export class Hud {
     this.upkeepEl.textContent = up.name;
     this.upkeepEl.className = 'upkeep u' + up.tier;
     this.drawClock();
+    this.tickDialogue(dt);
     // command card
     this.buttons = buildCard(this.host);
     const sig = this.buttons.map((b) => `${b.slot}:${b.icon.length}:${b.icon.slice(-24)}:${b.disabled ? 1 : 0}:${b.autocast ? 1 : 0}:${b.cdText ?? ''}:${b.level ?? ''}:${b.unlearned ? 1 : 0}:${b.cost ?? ''}:${b.learn ? 1 : 0}`).join('|');
@@ -526,14 +529,14 @@ export class Hud {
     if (e.lifetime > 0) queue += `<div style="font-size:12px;color:#c0b0ff">Expires in ${Math.ceil(e.lifetime)}s</div>`;
     let inv = '';
     if (e.hero) {
-      const keys = ['1', '2', '3', '4', '5', '6'];
+      const keys = ['Z', 'X', 'C', 'V', 'B', 'N'];
       inv =
         '<div class="inventory">' +
         e.hero.inventory
           .map((it, i) => {
             if (!it) return `<div class="slot" data-i="${i}"><span class="k">${keys[i]}</span></div>`;
             const ab = it.def.ability ? abilityTip_(it.def.ability) : '';
-            const tip = `<h4>${esc(it.def.name)}</h4><div>${esc(it.def.description)}</div>${ab}<div class='lv'>${it.def.ability ? 'Click or press Alt+' + keys[i] + ' to use. ' : ''}Right-click to drop or give. Drag to rearrange.</div>`;
+            const tip = `<h4>${esc(it.def.name)}</h4><div>${esc(it.def.description)}</div>${ab}<div class='lv'>${it.def.ability ? 'Click or press ' + keys[i] + ' to use. ' : ''}Right-click to drop or give. Drag to rearrange.</div>`;
             const cd = it.cd > 0 && it.def.ability ? `<div class="cd" style="height:${Math.round(Math.min(1, it.cd / Math.max(1, lv(abilityCd(it.def.ability), 1))) * 100)}%"></div>` : '';
             return `<div class="slot" data-i="${i}" data-tip="${tip.replace(/"/g, '&quot;')}"><img src="${iconURL(it.def.icon)}">${cd}<span class="k">${keys[i]}</span>${it.charges > 1 || (it.def.charges && it.def.charges > 1) ? `<span class="chg">${it.charges}</span>` : ''}</div>`;
           })
@@ -653,6 +656,55 @@ export class Hud {
       c.stroke();
       c.globalAlpha = 1;
     }
+  }
+
+  // ---------------------------------------------------------------------------
+  // campaign dialogue and objectives
+  // ---------------------------------------------------------------------------
+  private dq: { speaker: string; text: string; dur: number }[] = [];
+  private dTimer = 0;
+  private objList = new Map<string, { text: string; done: boolean; failed: boolean }>();
+
+  private queueDialogue(speaker: string, text: string, dur: number): void {
+    this.dq.push({ speaker, text, dur });
+    if (this.dTimer <= 0) this.nextDialogue();
+  }
+
+  private nextDialogue(): void {
+    const d = this.dq.shift();
+    if (!d) {
+      this.dialogue.style.display = 'none';
+      this.dTimer = 0;
+      return;
+    }
+    this.dTimer = d.dur;
+    this.dialogue.style.display = 'flex';
+    const initials = d.speaker
+      .split(' ')
+      .map((w) => w[0])
+      .slice(-2)
+      .join('');
+    this.dialogue.innerHTML = `<div style="width:64px;height:64px;border-radius:10px;border:1px solid #6a5a3a;background:radial-gradient(circle at 40% 35%,#5a4a2a,#1a1410);display:flex;align-items:center;justify-content:center;font-family:var(--title);font-size:24px;color:#f3e2b0;flex:none">${esc(initials)}</div><div><div class="who">${esc(d.speaker)}</div><div class="txt">${esc(d.text)}</div><div class="skip">Click to continue</div></div>`;
+    this.dialogue.onclick = () => this.nextDialogue();
+  }
+
+  tickDialogue(dt: number): void {
+    if (this.dTimer > 0) {
+      this.dTimer -= dt;
+      if (this.dTimer <= 0) this.nextDialogue();
+    }
+  }
+
+  private setObjective(id: string, text: string, done: boolean, failed: boolean): void {
+    const prev = this.objList.get(id);
+    this.objList.set(id, { text, done, failed });
+    if (!prev) this.message('New objective: ' + text, 'good');
+    else if (done && !prev.done) this.message('Objective complete: ' + text, 'good');
+    else if (failed && !prev.failed) this.message('Objective failed: ' + text, 'warn');
+    this.objectives.style.display = 'block';
+    this.objectives.innerHTML =
+      '<h4>Objectives</h4>' +
+      [...this.objList.values()].map((o) => `<div class="o${o.done ? ' done' : ''}${o.failed ? ' failed' : ''}">${o.done ? '✔' : o.failed ? '✖' : '◆'} ${esc(o.text)}</div>`).join('');
   }
 
   showEnd(html: string): void {
