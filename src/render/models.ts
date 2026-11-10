@@ -139,7 +139,9 @@ function buildTemplate(m: ModelSpec, team: number, def: EntityDef): Template {
     default:
       tb.b.box(0.4, 0.4, 0.4, 0xffffff, { y: 0.2 });
   }
-  return tb.build(m.kind, m.kind === 'building' || m.kind === 'mine' ? 1 : scale, def.radius ?? 0.4);
+  // units are drawn larger than their collision circle so they read clearly from the RTS camera
+  const unitScale = m.kind === 'building' || m.kind === 'mine' ? 1 : m.kind === 'ward' ? 1.1 : m.kind === 'flyer' || m.kind === 'machine' || m.kind === 'golem' || m.kind === 'treant' ? 1.15 : 1.3;
+  return tb.build(m.kind, m.kind === 'building' || m.kind === 'mine' ? 1 : scale * unitScale, def.radius ?? 0.4);
 }
 
 // ---------------------------------------------------------------------------
