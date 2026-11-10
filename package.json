@@ -1,0 +1,21 @@
+{
+  "name": "opuscraft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Opuscraft: a fantasy real-time strategy game with RPG heroes, four asymmetric factions and a living world.",
+  "license": "GPL-3.0-only",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node tools/build.mjs --serve",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "node tools/build.mjs --tests && node dist-tests/simtest.js"
+  },
+  "devDependencies": {
+    "@types/three": "0.170.0",
+    "esbuild": "0.24.0",
+    "typescript": "5.6.3"
+  },
+  "dependencies": {
+    "three": "0.170.0"
+  }
+}

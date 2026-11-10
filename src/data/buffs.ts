@@ -1,0 +1,78 @@
+import { regBuffs } from './registry';
+import type { BuffDef } from './types';
+
+const B = (b: BuffDef) => b;
+
+regBuffs([
+  // ---- generic control ----
+  B({ id: 'stun', name: 'Stunned', positive: false, flags: ['stun'], fx: 'stun', dispellable: false }),
+  B({ id: 'root', name: 'Rooted', positive: false, flags: ['root'], fx: 'roots' }),
+  B({ id: 'entangle', name: 'Entangled', positive: false, flags: ['root', 'disarm'], fx: 'roots' }),
+  B({ id: 'silence', name: 'Silenced', positive: false, flags: ['silence'], fx: 'silence' }),
+  B({ id: 'sleep', name: 'Asleep', positive: false, flags: ['sleep'], fx: 'sleep' }),
+  B({ id: 'creepsleep', name: 'Sleeping', positive: false, flags: ['sleep'], fx: 'sleep', dispellable: false }),
+  B({ id: 'polymorph', name: 'Transmuted', positive: false, flags: ['polymorph'], fx: 'polymorph' }),
+  B({ id: 'fear', name: 'Terrified', positive: false, flags: ['fear'], fx: 'fear' }),
+  B({ id: 'taunted', name: 'Taunted', positive: false, flags: ['taunted'], fx: 'taunt' }),
+  B({ id: 'shackle', name: 'Arcane Shackle', positive: false, flags: ['stun'], fx: 'shackle' }),
+  B({ id: 'phased', name: 'Phased', positive: true, flags: ['invulnerable'], dispellable: false }),
+  B({ id: 'invuln', name: 'Invulnerable', positive: true, flags: ['invulnerable'], fx: 'holyshield' }),
+  B({ id: 'undying', name: 'Last Stand', positive: true, flags: ['undying'], fx: 'laststand', dispellable: false }),
+  B({ id: 'revealed', name: 'Revealed', positive: false, flags: ['revealed'], fx: 'revealed' }),
+  B({ id: 'magicImmune', name: 'Spell Immunity', positive: true, flags: ['magicImmune'], fx: 'immune' }),
+  // ---- movement / speed ----
+  B({ id: 'slow', name: 'Slowed', positive: false, mods: { moveSpeedPct: -0.4, attackSpeedPct: -0.25 }, fx: 'slow', tint: 0x88aaff }),
+  B({ id: 'frostslow', name: 'Chilled', positive: false, mods: { moveSpeedPct: -0.3, attackSpeedPct: -0.15 }, fx: 'frost', tint: 0x9fd8ff }),
+  B({ id: 'cripple', name: 'Weakened', positive: false, fx: 'cripple', tint: 0x80ff80 }),
+  B({ id: 'haste', name: 'Haste', positive: true, fx: 'haste' }),
+  B({ id: 'warpaint', name: 'War Paint', positive: true, fx: 'warpaint', tint: 0xff6040 }),
+  B({ id: 'frenzy', name: 'Frenzy', positive: true, fx: 'frenzy', tint: 0xff3020 }),
+  B({ id: 'rally', name: 'Rallied', positive: true, fx: 'rally' }),
+  // ---- damage over time / heal over time ----
+  B({ id: 'burn', name: 'Burning', positive: false, fx: 'burn' }),
+  B({ id: 'poison', name: 'Poisoned', positive: false, fx: 'poison', tint: 0x80ff60 }),
+  B({ id: 'plague', name: 'Plague', positive: false, fx: 'plague', tint: 0x9cff7a }),
+  B({ id: 'soulleech', name: 'Soul Leech', positive: false, fx: 'drain' }),
+  B({ id: 'regenerating', name: 'Regenerating', positive: true, fx: 'regen' }),
+  B({ id: 'renewal', name: 'Renewal', positive: true, fx: 'regen' }),
+  B({ id: 'spiritmend', name: 'Spirit Mend', positive: true, fx: 'regen' }),
+  B({ id: 'devouring', name: 'Devouring', positive: true, fx: 'devour', dispellable: false }),
+  B({ id: 'sanctuary', name: 'Sanctuary', positive: true, fx: 'regen' }),
+  // ---- defensive ----
+  B({ id: 'armorUp', name: 'Fortified', positive: true, fx: 'armorup' }),
+  B({ id: 'armorDown', name: 'Sundered', positive: false, fx: 'armordown' }),
+  B({ id: 'withered', name: 'Withered', positive: false, maxStacks: 3, fx: 'armordown', dispellable: true }),
+  B({ id: 'boneArmor', name: 'Bone Armor', positive: true, fx: 'bonearmor' }),
+  B({ id: 'wardOfLight', name: 'Ward of Light', positive: true, fx: 'holyshield' }),
+  B({ id: 'barkskin', name: 'Barkskin', positive: true, fx: 'bark' }),
+  B({ id: 'bellow', name: 'Cowed', positive: false, fx: 'cowed' }),
+  B({ id: 'marked', name: "Hunter's Mark", positive: false, fx: 'marked' }),
+  B({ id: 'deathchill', name: 'Deathly Chill', positive: false, fx: 'frost', tint: 0x9fd8ff }),
+  B({ id: 'withering', name: 'Withering Field', positive: false, fx: 'wither' }),
+  B({ id: 'moondust', name: 'Moon Dust', positive: false, flags: ['revealed'], fx: 'revealed' }),
+  // ---- stealth ----
+  B({ id: 'fade', name: 'Fade', positive: true, flags: ['invisible'], breakOnAction: true, fx: 'fade' }),
+  B({ id: 'nightveil', name: 'Night Veil', positive: true, flags: ['invisible'], breakOnAction: true, fx: 'fade', dispellable: false }),
+  B({ id: 'mirrorveil', name: 'Mirror Veil', positive: true, flags: ['invisible'], breakOnAction: true, fx: 'fade' }),
+  // ---- forms ----
+  B({ id: 'primalForm', name: 'Primal Form', positive: true, fx: 'bigform', dispellable: false }),
+  B({ id: 'huntFrenzy', name: 'Hunt of the Wild', positive: true, fx: 'frenzy', dispellable: false }),
+  B({ id: 'infernal', name: 'Infernal Ascension', positive: true, fx: 'bigform', dispellable: false }),
+  B({ id: 'mechsuit', name: 'Iron Exosuit', positive: true, fx: 'bigform', dispellable: false }),
+  B({ id: 'stoneSkin', name: 'Runic Plating', positive: true }),
+  // ---- auras (applied continuously by sources) ----
+  B({ id: 'aura_fortitude', name: 'Fortitude Aura', positive: true, fx: 'aura' }),
+  B({ id: 'aura_halo', name: 'Halo Aura', positive: true, fx: 'aura' }),
+  B({ id: 'aura_banner', name: 'Rallying Banner', positive: true, fx: 'aura' }),
+  B({ id: 'aura_hunger', name: 'Battle Hunger', positive: true, fx: 'aura' }),
+  B({ id: 'aura_chill', name: 'Deathly Chill', positive: false, fx: 'aura' }),
+  B({ id: 'aura_verdant', name: 'Verdant Aura', positive: true, fx: 'aura' }),
+  B({ id: 'aura_searing', name: 'Searing Aura', positive: false, fx: 'aura' }),
+  B({ id: 'aura_infernal', name: 'Infernal Skin', positive: true, fx: 'aura' }),
+  B({ id: 'aura_drums', name: 'War Drums', positive: true, fx: 'aura' }),
+  B({ id: 'aura_disease', name: 'Disease Cloud', positive: false, fx: 'aura' }),
+  B({ id: 'aura_howl', name: 'Pack Howl', positive: true, fx: 'aura' }),
+  B({ id: 'aura_valor', name: 'Warhorn of Valor', positive: true, mods: { damagePct: 0.12 }, fx: 'aura' }),
+  B({ id: 'aura_guard', name: 'Aegis Charm', positive: true, mods: { armor: 2 }, fx: 'aura' }),
+  B({ id: 'aura_wind', name: 'Wind Ward', positive: true, fx: 'aura' }),
+]);
