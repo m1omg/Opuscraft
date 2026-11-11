@@ -63,13 +63,13 @@ regDefs([
   }),
   unit({
     id: 'ir_warrior', name: 'Ironhide Warrior', faction: F, description: 'A towering axe fighter with great endurance. The core of any Clan warband.',
-    hp: 680, armor: 1, armorType: 'medium', cost: { gold: 165, lumber: 0, food: 3 }, buildTime: 24, speed: 2.5, radius: 0.42, level: 3,
+    hp: 700, armor: 1, armorType: 'medium', cost: { gold: 155, lumber: 0, food: 3 }, buildTime: 22, speed: 2.5, radius: 0.42, level: 3,
     weapon: melee([18, 22], 1.5), abilities: ['ir_rage'], tags: { organic: true, melee: true }, hotkey: 'W', priority: 4,
     model: { kind: 'humanoid', scale: 1.1, bulk: 1.35, skin: SKIN, body: IRON, armor: IRON, legs: 0x4a3a2a, helm: 'horned', helmColor: IRON, weapon: 'axe', tusks: true, team: 'sash' },
   }),
   unit({
     id: 'ir_spearhunter', name: 'Spear Hunter', faction: F, description: 'A woodland hunter who hurls heavy javelins at targets on the ground and in the air.',
-    hp: 360, armor: 0, armorType: 'medium', cost: { gold: 135, lumber: 20, food: 2 }, buildTime: 22, speed: 2.5, radius: 0.36, level: 2,
+    hp: 380, armor: 0, armorType: 'medium', cost: { gold: 135, lumber: 20, food: 2 }, buildTime: 22, speed: 2.5, radius: 0.36, level: 2,
     weapon: missile([20, 24], 4.6, 'pierce', SPEAR, 1.6), tags: { organic: true, ranged: true }, hotkey: 'S', priority: 3,
     model: { kind: 'humanoid', skin: 0x5a8a7a, body: HIDE, legs: 0x5a4030, weapon: 'javelin', tusks: true, ears: true, hunch: true, team: 'sash', mohawk: RED },
   }),

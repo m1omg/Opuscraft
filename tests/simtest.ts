@@ -65,6 +65,7 @@ if (args[0] === 'all') {
     for (const a of fs)
       for (const b of fs) {
         if (a === b) continue;
+        if (args[3] && a !== args[3] && b !== args[3]) continue; // optional focus faction
         for (let s = 1; s <= seeds; s++) {
           const w = run(m, [a, b], ['normal'], s * 97 + n, 45, false);
           n++;
