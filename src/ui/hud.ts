@@ -71,6 +71,7 @@ export class Hud {
   private speedInd: HTMLElement;
   private pausedInd: HTMLElement;
   private tipTarget: HTMLElement | null = null;
+  private lastMouse = { x: -1, y: -1 };
   private dragSlot = -1;
   private miniDragging = false;
 
@@ -243,7 +244,17 @@ export class Hud {
   }
 
   // ---------------------------------------------------------------------------
+  /** re-evaluate the tooltip after the element under a resting mouse was re-rendered */
+  private refreshTooltip(): void {
+    if (this.tooltip.style.display !== 'block' || this.lastMouse.x < 0) return;
+    if (this.tipTarget && this.tipTarget.isConnected) return;
+    const target = document.elementFromPoint(this.lastMouse.x, this.lastMouse.y);
+    this.updateTooltip({ target, clientX: this.lastMouse.x, clientY: this.lastMouse.y } as unknown as MouseEvent);
+  }
+
   private updateTooltip(ev: MouseEvent): void {
+    this.lastMouse.x = ev.clientX;
+    this.lastMouse.y = ev.clientY;
     let t = (ev.target as HTMLElement | null)?.closest?.('[data-tip], .cmd') as HTMLElement | null;
     if (t && !this.root.contains(t)) t = null;
     if (!t) {
@@ -364,6 +375,7 @@ export class Hud {
       slots[b.slot] = `<button class="${cls.join(' ')}" data-slot="${b.slot}"><img src="${b.icon}"><span class="hk">${b.label}</span>${b.cost ? `<span class="cost">${b.cost}</span>` : ''}${b.level ? `<span class="lvl">${b.level}</span>` : ''}<div class="cdov" style="height:${Math.round((b.cd ?? 0) * 100)}%"></div>${b.cdText ? `<div class="cdtxt">${b.cdText}</div>` : ''}</button>`;
     }
     this.card.innerHTML = slots.map((s, i) => s || `<div data-empty="${i}"></div>`).join('');
+    this.refreshTooltip();
   }
 
   private updateCooldowns(): void {
@@ -445,6 +457,7 @@ export class Hud {
       html = `<div class="stats"><h3>${esc(f.name)}</h3><div class="sub">${esc(f.description)}</div><div class="lv" style="font-size:12px;color:#a39d8e;margin-top:6px">Left-click or drag to select units. Right-click to move, attack or gather. Press <span class="kbd">F1</span> for your first hero.</div></div>`;
       if (html !== this.infoSig) {
         this.info.innerHTML = html;
+        this.refreshTooltip();
         this.infoSig = html;
       }
       return;
@@ -461,6 +474,7 @@ export class Hud {
       html = `<div class="multi">${cells}</div>`;
       if (html !== this.infoSig) {
         this.info.innerHTML = html;
+        this.refreshTooltip();
         this.infoSig = html;
       }
       return;
@@ -546,6 +560,7 @@ export class Hud {
     html = `<div class="portrait"><img src="${portraits.get(d.id, color(e))}"></div><div class="stats"><h3>${esc(d.name)}</h3><div class="sub">${sub}</div>${hpLine}${attrs}<div class="statgrid">${stats}</div><div class="buffs">${buffs}</div>${queue}</div>${inv}`;
     if (html !== this.infoSig) {
       this.info.innerHTML = html;
+      this.refreshTooltip();
       this.infoSig = html;
     }
   }

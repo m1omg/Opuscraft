@@ -8,6 +8,10 @@ import { MISSIONS } from './campaign/missions';
 import type { FactionId } from './data/types';
 import type { GameSetup } from './sim/world';
 import { DEFS } from './data/registry';
+import { kill } from './sim/combat';
+
+// small debugging handle used by the automated browser play-tests
+(window as unknown as { opus: unknown }).opus = { kill, DEFS };
 
 const errs = validateData();
 if (errs.length) console.error('Data errors', errs);

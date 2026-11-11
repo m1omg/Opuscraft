@@ -95,6 +95,13 @@ class Script implements WorldScript {
     this.objectives.set(id, { text, done: false, failed: false });
     this.w.emit({ t: 'objective', id, text });
   }
+  /** change an objective's text (e.g. a progress counter) without completing it */
+  progress(id: string, text: string): void {
+    const o = this.objectives.get(id);
+    if (!o || o.done || o.text === text) return;
+    o.text = text;
+    this.w.emit({ t: 'objective', id, text });
+  }
   complete(id: string): void {
     const o = this.objectives.get(id);
     if (!o || o.done) return;
@@ -300,7 +307,7 @@ class ShardRoadScript extends Script {
 class HungerScript extends Script {
   private readonly length = 660;
   private wave = 0;
-  private nextWave = 90;
+  private nextWave = 110;
   private startT = 0;
   start(): void {
     const w = this.w;
@@ -308,6 +315,9 @@ class HungerScript extends Script {
     const p = w.players[0];
     const h = this.spawn('ir_h_warlord', 0, p.startX + 3, p.startY - 5)[0];
     this.heroLevel(h, 2);
+    // the clan arrived with a war camp already standing and a few warriors
+    this.place('ir_warcamp', 0, p.startX - 6, p.startY - 6, 4);
+    this.spawn('ir_warrior', 0, p.startX + 1, p.startY - 6, 3);
     // the enemy keeps a fortress in the north
     this.after(1, () => this.say('Warchief Korga Ironmaw', 'The dead walk out of the northern barrows and our hunters find only bones. The Conclave wants this valley.'));
     this.after(8, () => this.say('Warchief Korga Ironmaw', 'Then they will choke on it. Raise palisades, sharpen spears. We hold until the war host arrives from the south!'));
@@ -324,7 +334,7 @@ class HungerScript extends Script {
     if (Math.floor(left) % 60 === 0 && Math.floor(left) > 0 && w.tick % 20 === 0) this.say('Shaman Ruuk', `${Math.floor(left / 60)} minute${left >= 120 ? 's' : ''} until the war host arrives.`, 4);
     if (t >= this.nextWave && left > 20) {
       this.wave++;
-      this.nextWave = t + Math.max(55, 85 - this.wave * 3);
+      this.nextWave = t + Math.max(60, 85 - this.wave * 3);
       this.launchWave();
     }
     if (left <= 0) {
@@ -347,14 +357,14 @@ class HungerScript extends Script {
     const p0 = w.players[0];
     const n = this.wave;
     const comp: [string, number][] = [
-      ['sep_skeleton', 2 + n],
-      ['sep_gravedigger', Math.floor((n + 1) / 2)],
+      ['sep_skeleton', 1 + n],
+      ['sep_gravedigger', Math.floor(n / 2)],
       ['sep_archer', Math.floor(n / 3)],
     ];
     if (n >= 4) comp.push(['sep_rider', Math.floor((n - 2) / 3)]);
     if (n >= 5) comp.push(['sep_necro', 1]);
-    if (n >= 7) comp.push(['sep_colossus', 1]);
-    if (n >= 8) comp.push(['sep_rotwing', 2]);
+    // the last waves bring the heavy hitters
+    if (n >= 8) comp.push(['sep_colossus', 1], ['sep_rotwing', 1]);
     const all: Entity[] = [];
     for (const [id, c] of comp) all.push(...this.spawn(id, 1, s1.x, s1.y + 8, c));
     for (const u of all) if (u.def.id === 'sep_skeleton') u.lifetime = 0;
@@ -444,7 +454,7 @@ class RootsScript extends Script {
     });
     if (freed !== this.freed) {
       this.freed = freed;
-      w.emit({ t: 'objective', id: 'cages', text: `Destroy the three Soul Cages (${freed}/3)`, done: freed >= 3 });
+      this.progress('cages', `Destroy the three Soul Cages (${freed}/3)`);
       if (freed >= 3) this.complete('cages');
     }
     if (this.isDone('cages') && !this.isDone('grove') && this.heroes.some((h) => h.alive && dist(h.x, h.y, this.grove.x, this.grove.y) < 10)) {
@@ -550,6 +560,8 @@ export const MISSIONS: Mission[] = [
       setup: {
         map: presetData('frostfang'),
         seed: 303,
+        startGold: 800,
+        startLumber: 400,
         players: [
           { name: 'Iron Clans', faction: 'iron', color: 0, team: 0, ai: false, difficulty: 'normal', start: 0 },
           { name: 'Sepulchral Conclave', faction: 'sepulchral', color: 2, team: 1, ai: false, difficulty: 'normal', start: 1 },

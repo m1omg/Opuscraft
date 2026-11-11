@@ -51,6 +51,34 @@ if (args[0] === 'all') {
   const fs: FactionId[] = ['crown', 'iron', 'sepulchral', 'twilight'];
   let s = 1;
   for (const a of fs) for (const b of fs) if (a < b) run('thornvale', [a, b], ['normal'], s++, 45, false);
+} else if (args[0] === 'balance') {
+  // round robin with several seeds and both start positions; tallies wins per faction
+  const fs: FactionId[] = ['crown', 'iron', 'sepulchral', 'twilight'];
+  const maps = (args[1] || 'thornvale').split(',');
+  const seeds = Number(args[2] || 3);
+  const wins: Record<string, number> = { crown: 0, iron: 0, sepulchral: 0, twilight: 0, none: 0 };
+  const games: Record<string, number> = { crown: 0, iron: 0, sepulchral: 0, twilight: 0 };
+  const pair: Record<string, string> = {};
+  let totalMin = 0;
+  let n = 0;
+  for (const m of maps)
+    for (const a of fs)
+      for (const b of fs) {
+        if (a === b) continue;
+        for (let s = 1; s <= seeds; s++) {
+          const w = run(m, [a, b], ['normal'], s * 97 + n, 45, false);
+          n++;
+          totalMin += w.time / 60;
+          games[a]++;
+          games[b]++;
+          const win = w.winners.length ? w.players[w.winners[0]].faction : 'none';
+          wins[win]++;
+          const key = [a, b].sort().join('-');
+          pair[key] = (pair[key] ?? '') + (win === 'none' ? '-' : win[0]);
+        }
+      }
+  console.log('wins', JSON.stringify(wins), 'games', JSON.stringify(games), 'avg length', (totalMin / n).toFixed(1) + 'm');
+  for (const k in pair) console.log(k.padEnd(22), pair[k]);
 } else if (args[0] === 'ffa') {
   run('fourbanners', ['crown', 'iron', 'sepulchral', 'twilight'], ['normal'], 5, 50, true);
 } else {
