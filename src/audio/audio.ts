@@ -58,6 +58,34 @@ const LINES: Record<FactionId, { wSel: string[]; wOrd: string[]; sel: string[]; 
   },
 };
 
+/** lines when the same unit is clicked again and again */
+const ANNOYED: Record<FactionId, string[]> = {
+  crown: ['Yes, I am still here.', 'Is there a problem, commander?', 'Poking me will not win the war.', 'I have a sword, you know.'],
+  iron: ['Stop poking!', 'You want fight with me?', 'Chief, I am busy being strong.', 'Grr. Again?'],
+  sepulchral: ['I was dead already. This is worse.', 'Your touch is colder than mine.', 'Patience is a virtue of the grave.', 'Again? Truly?'],
+  twilight: ['Even the oldest oak grows weary.', 'I am not a drum.', 'Gently, please.', 'The wind is less restless than you.'],
+};
+
+/** heroes speak their own lines */
+const HERO_LINES: Record<string, { sel: string[]; ord: string[]; atk: string[] }> = {
+  cr_h_marshal: { sel: ['The line holds while I stand.', 'Marshal, reporting.', 'Give the word.'], ord: ['Form up behind me.', 'We advance.', 'On my mark.'], atk: ['Shields high, blades out!', 'Break them!', 'For the League!'] },
+  cr_h_lightwarden: { sel: ['The dawn is near.', 'Light keeps us.', 'I am listening.'], ord: ['Where the light leads.', 'I will go.', 'Walk with me.'], atk: ['Burn in the dawn!', 'Begone, darkness!', 'By the first light!'] },
+  cr_h_thane: { sel: ['Powder is dry, barrel is clean.', 'What needs shooting?', 'Aye?'], ord: ['Hauling my gear.', 'Right then.', 'Lead on.'], atk: ['Fire in the hole!', 'Line it up!', 'Steady... now!'] },
+  ir_h_warlord: { sel: ['The clans follow strength.', 'Speak quickly.', 'My axe is thirsty.'], ord: ['The warband moves.', 'Ha! Good.', 'Follow me!'], atk: ['Feel the earth shake!', 'For the clans!', 'Crush them all!'] },
+  ir_h_beastcaller: { sel: ['The beasts are restless.', 'I hear the wild.', 'Yes?'], ord: ['The pack moves.', 'I track them.', 'Silent feet.'], atk: ['Hunt!', 'Tear them down!', 'The pack strikes!'] },
+  ir_h_storm: { sel: ['The sky speaks to me.', 'Thunder waits.', 'The spirits listen.'], ord: ['Riding the wind.', 'The storm follows.', 'So it shall be.'], atk: ['Lightning take you!', 'Feel the storm!', 'Spirits, strike!'] },
+  sep_h_gravelord: { sel: ['Every grave answers me.', 'I rose for this.', 'Command me.'], ord: ['The dead march.', 'Onward to the grave.', 'Lead them to me.'], atk: ['Your bones are mine!', 'Kneel in the dirt!', 'Rise no more!'] },
+  sep_h_witch: { sel: ['Whispers, whispers.', 'The rot is beautiful.', 'Yesss?'], ord: ['I drift.', 'Where the fog goes.', 'Mmm, yes.'], atk: ['Wither!', 'Your blood runs cold!', 'Choke on it!'] },
+  sep_h_shadowblade: { sel: ['From the shadows.', 'Name the target.', 'Unseen, unheard.'], ord: ['Vanishing.', 'They will not see me.', 'Quietly.'], atk: ['Behind you.', 'One cut is enough.', 'Too slow.'] },
+  tw_h_ranger: { sel: ['My bow is strung.', 'The moon guides my aim.', 'I see far.'], ord: ['Swift and silent.', 'Through the canopy.', 'I am gone.'], atk: ['Mark them!', 'Loose!', 'None outrun the moonlight!'] },
+  tw_h_keeper: { sel: ['The forest remembers.', 'Roots run deep.', 'Peace, friend.'], ord: ['The grove guides me.', 'Patiently.', 'I will tend to it.'], atk: ['The wild rises!', 'Roots, hold them!', 'Nature answers!'] },
+  tw_h_wildheart: { sel: ['The beast within stirs.', 'Ready to run.', 'Hmm?'], ord: ['Running!', 'On four feet or two.', 'Wild and free.'], atk: ['Claws out!', 'Rrraagh!', 'Into the fray!'] },
+  nh_djinn: { sel: ['You summoned a flame. Speak.', 'The embers listen.', 'Coin first, then fire.'], ord: ['I drift like smoke.', 'As the fire wills.', 'Mmm, warm.'], atk: ['Burn!', 'Ashes to ashes!', 'Feel the heat!'] },
+  nh_tinker: { sel: ['Gears are turning!', 'Need something built?', 'Tinkerer at your service.'], ord: ['Clanking along!', 'Calculating route.', 'Wind me up!'], atk: ['Deploy the contraption!', 'Tick, tock, boom!', 'Engineering!'] },
+  nh_reaver: { sel: ['The wastes made me.', 'Speak, paymaster.', 'I hunger for battle.'], ord: ['Through fire and ash.', 'Fine.', 'I go.'], atk: ['Reap!', 'Into the ash!', 'Fall!'] },
+};
+const NEUTRAL_TONE = { pitch: 0.85, rate: 0.95 };
+
 const VOICE_TONE: Record<FactionId, { pitch: number; rate: number }> = {
   crown: { pitch: 1.0, rate: 1.0 },
   iron: { pitch: 0.55, rate: 0.9 },
@@ -713,30 +741,46 @@ export class AudioEngine {
   // ---------------------------------------------------------------------------
   // voices
   // ---------------------------------------------------------------------------
-  voiceSelect(e: Entity): void {
-    this.say(e, 'sel');
+  /** `repeat` counts quick re-selections of the same unit; units grow testy after a few */
+  voiceSelect(e: Entity, repeat = 0): void {
+    if (repeat >= 4) this.say(e, 'annoyed', true);
+    else this.say(e, 'sel');
   }
 
   voiceOrder(e: Entity, attack: boolean): void {
     this.say(e, attack ? 'atk' : 'ord');
   }
 
-  private say(e: Entity, kind: 'sel' | 'ord' | 'atk', force = false): void {
+  private say(e: Entity, kind: 'sel' | 'ord' | 'atk' | 'annoyed', force = false): void {
     if (!this.settings.voices || this.settings.voice <= 0.01 || this.settings.master <= 0.01) return;
     if (typeof speechSynthesis === 'undefined') return;
     const f = e.def.faction;
-    if (f === 'neutral' || !LINES[f as FactionId]) return;
+    if (!HERO_LINES[e.def.id] && (f === 'neutral' || !LINES[f as FactionId])) return;
     const now = performance.now();
     if (!force && now - this.lastVoice < 1400) return;
     if (!force && kind !== 'atk' && Math.random() < 0.35) return;
     this.lastVoice = now;
     const L = LINES[f as FactionId];
-    const pool = kind === 'sel' ? (e.isWorker ? L.wSel : L.sel) : kind === 'atk' ? L.atk : e.isWorker ? L.wOrd : L.ord;
+    const H = HERO_LINES[e.def.id];
+    const pool =
+      kind === 'annoyed'
+        ? (ANNOYED[f as FactionId] ?? ANNOYED.crown)
+        : H
+          ? H[kind]
+          : kind === 'sel'
+            ? e.isWorker
+              ? L.wSel
+              : L.sel
+            : kind === 'atk'
+              ? L.atk
+              : e.isWorker
+                ? L.wOrd
+                : L.ord;
     const text = pool[Math.floor(Math.random() * pool.length)];
     try {
       speechSynthesis.cancel();
       const u = new SpeechSynthesisUtterance(text);
-      const tone = VOICE_TONE[f as FactionId];
+      const tone = VOICE_TONE[f as FactionId] ?? NEUTRAL_TONE;
       const big = e.radius > 0.6 ? 0.8 : 1;
       u.pitch = Math.max(0.1, Math.min(2, tone.pitch * big * (e.hero ? 0.9 : 1)));
       u.rate = tone.rate;

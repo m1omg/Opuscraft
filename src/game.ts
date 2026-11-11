@@ -54,6 +54,7 @@ export class GameSession implements InputHost {
   private footTimer = 0;
   readonly isTeamGame: boolean;
   private defeatedShown = false;
+  private lastVoiceSel = { id: -1, t: 0, n: 0 };
 
   constructor(parent: HTMLElement, cfg: SessionConfig) {
     this.cfg = cfg;
@@ -190,7 +191,14 @@ export class GameSession implements InputHost {
     this.targetMode = null;
     this.placing = null;
     this.placementRoot = -1;
-    if (ents[0] && ents[0].owner === this.local) this.audio?.voiceSelect(ents[0]);
+    if (ents[0] && ents[0].owner === this.local) {
+      // count quick re-clicks on the same single unit
+      const now = performance.now();
+      const same = ents.length === 1 && this.lastVoiceSel.id === ents[0].id && now - this.lastVoiceSel.t < 1500;
+      this.lastVoiceSel = { id: ents.length === 1 ? ents[0].id : -1, t: now, n: same ? this.lastVoiceSel.n + 1 : 0 };
+      this.audio?.voiceSelect(ents[0], this.lastVoiceSel.n);
+      if (this.lastVoiceSel.n >= 4) this.lastVoiceSel.n = 0;
+    }
   }
 
   setActiveType(t: string): void {
