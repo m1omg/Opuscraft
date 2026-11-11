@@ -33,7 +33,8 @@ A mouse and keyboard are expected. Use a window of at least about 1280×720.
   | Four Banners | 144 | 4 | Rich shared heartland, good for FFA or 2v2 |
   | Mirefen Hollows | 144 | 4 | Swamp with a dragon at its heart |
 
-  You can also spectate AI-only games.
+  You can also spectate AI-only games. Maps you build in the Map Editor are listed under **Your maps**.
+- **Map Editor:** build your own maps and play them in Skirmish. See [Map Editor](#map-editor) below.
 
 ### Rules at a glance
 
@@ -77,6 +78,22 @@ The in-game menu (F10 or Esc) has a full **How to Play** page. The essentials:
 | + / − / Pause | Change game speed / pause (single player) |
 
 Buildings and build menus use the command card grid keys (Q W E R / A S D F / Z X C V).
+
+### Map Editor
+
+Open **Map Editor** from the main menu. Maps are drawn top-down on a tile grid:
+
+- **Ground:** eight ground types (grass, dirt, rock, sand, snow, road, moss, ash), painted with a round brush of size 1–12.
+- **Cliffs:** *Raise* and *Lower* paint high ground one level above or below where the stroke starts (levels 0–2). *Ramp* cuts a 4-tile ramp when you click the edge of high ground.
+- **Water:** shallow water (passable, no building) and deep water (impassable) on the lowest level. Ashen maps show it as lava.
+- **Forest:** plant or clear trees. Trees are the only source of lumber.
+- **Objects:** start locations (up to four), gold mines (mines near a start get main-base gold), creep camps in four strengths, an inn, a merchant, a mercenary camp, and health and mana springs. The eraser removes objects. Placement shows green or red, and objects need flat, dry ground away from other objects.
+- **Symmetry:** mirror left/right, or rotate for 2 or 4 players, so every base gets an identical copy of what you paint and place.
+- **Map check:** a live check lists problems that stop the map from being played, such as fewer than two starts or a start that cannot be reached by land. It also warns about starts without a nearby mine or trees.
+- **Save / Open:** maps are saved in this browser and appear in Skirmish. **Share** shows the map as text you can copy, and imports a map from pasted text. **New** can start from empty land or from a copy of any built-in map.
+- **Test Map** plays the map at once against a Normal computer opponent, then returns to the editor.
+
+Controls: left drag paints or places, right or middle drag pans, the wheel zooms, arrow keys pan, `[` `]` change the brush size, and Ctrl+Z / Ctrl+Y undo and redo.
 
 ### Options
 
@@ -130,6 +147,7 @@ Browser tools use the pre-installed Playwright:
 
 - `node tools/shot.cjs "<query>" out.png [waitMs]` takes a screenshot of the built game.
 - `node tools/playtest.cjs <outDir> <faction>` runs a scripted play-test of hero training, skills, casting, shops, items and revival through the real keyboard and mouse input.
+- `node tools/editortest.cjs <outDir>` builds a map in the editor (symmetric plateaus, ramps, objects, undo), checks, saves, exports and imports it, test-plays it and finds it in Skirmish.
 
 Debug URL parameters for `dist/index.html`:
 
@@ -137,6 +155,7 @@ Debug URL parameters for `dist/index.html`:
 - `?spectate&t=600&reveal` starts an AI-vs-AI game fast-forwarded by 600 seconds, with the map revealed.
 - `?mission=m3` starts a campaign mission.
 - `?gallery=crown` shows every unit model of a faction. Add `&b` for buildings, or use `gallery=neutral` for creeps.
+- `?editor` opens the map editor; `?editor=frostfang` opens it with a copy of a built-in map.
 
 ## Technical notes
 
@@ -157,6 +176,7 @@ src/
   ui/         HUD, command card, menus, options, icons, portraits, input
   audio/      synthesized sound and music
   campaign/   campaign missions and scripts
+  editor/     map editor and the map text format
   game.ts     game session (fixed-step loop, event routing)
   main.ts     app entry: menus, skirmish, campaign flow
 tests/        headless simulation and campaign tests
@@ -166,7 +186,7 @@ tools/        build script, screenshot and play-test tools
 ## Not included
 
 - **Online multiplayer:** all games are local against the computer. The deterministic lockstep-friendly simulation would be the base for it.
-- **Map editor:** maps are generated from presets by `src/sim/mapgen.ts`.
+- **Scripting in the editor:** the guide's world editor also defines custom units, triggers and scripted events. Opuscraft's editor covers terrain and map objects; campaign-style scripting exists only in code (`src/campaign/missions.ts`).
 - **Save/load in the middle of a match.**
 
 ## License

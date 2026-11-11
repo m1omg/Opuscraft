@@ -26,14 +26,14 @@ function vecToDir(dx: number, dy: number): Dir {
 }
 const OPP: Record<Dir, Dir> = { n: 's', s: 'n', e: 'w', w: 'e' };
 
-const BIOME_BASE: Record<BiomeId, number> = {
+export const BIOME_BASE: Record<BiomeId, number> = {
   temperate: Terrain.Grass,
   winter: Terrain.Snow,
   badlands: Terrain.Sand,
   marsh: Terrain.Moss,
   ashen: Terrain.Ash,
 };
-const BIOME_TREES: Record<BiomeId, number[]> = {
+export const BIOME_TREES: Record<BiomeId, number[]> = {
   temperate: [0, 0, 1],
   winter: [2, 2, 0],
   badlands: [3, 4, 3],
@@ -41,7 +41,7 @@ const BIOME_TREES: Record<BiomeId, number[]> = {
   ashen: [6, 6, 3],
 };
 
-const CAMPS: Record<CampSpec['difficulty'], { creeps: string[]; drop: number }[]> = {
+export const CAMPS: Record<CampSpec['difficulty'], { creeps: string[]; drop: number }[]> = {
   green: [
     { creeps: ['kobold_digger', 'kobold_digger', 'kobold_shaman'], drop: 1 },
     { creeps: ['gray_wolf', 'gray_wolf'], drop: 1 },

@@ -2,6 +2,7 @@ import { FACTIONS } from '../data/registry';
 import type { FactionId } from '../data/types';
 import { DT } from '../data/rules';
 import { MAP_PRESETS, generateMap } from '../sim/mapgen';
+import { decodeMap, listSavedMaps } from '../editor/mapcodec';
 import type { MapData } from '../sim/map';
 import { PLAYER_COLORS, type Difficulty } from '../sim/player';
 import { World, type PlayerSetup } from '../sim/world';
@@ -102,6 +103,7 @@ class Backdrop {
 
 export interface MenuCallbacks {
   startSkirmish(cfg: SkirmishConfig): void;
+  openEditor(): void;
   startMission(id: string): void;
   settings: Settings;
   onSettings(s: Settings): void;
@@ -171,6 +173,7 @@ export class MainMenu {
     m.innerHTML = '<h1 class="logo">OPUSCRAFT</h1><div class="tagline">War of the Four Banners</div>';
     this.button(m, 'Campaign', () => this.showCampaign(), 'btn primary');
     this.button(m, 'Skirmish', () => this.showSkirmish());
+    this.button(m, 'Map Editor', () => this.cb.openEditor());
     this.button(m, 'How to Play', () => this.showHelp());
     this.button(m, 'Options', () => this.showOptions());
     this.button(m, 'About', () => this.showAbout());
@@ -274,12 +277,18 @@ export class MainMenu {
     preview.style.height = '260px';
     left.appendChild(preview);
 
+    type MapEntry = { id: string; name: string; description: string; players: number; custom: boolean; load: () => MapData };
+    const entries: MapEntry[] = MAP_PRESETS.map((m) => ({ id: m.id, name: m.name, description: m.description, players: m.players, custom: false, load: () => generateMap(m) }));
+    for (const sm of listSavedMaps()) {
+      if (sm.players < 2) continue;
+      entries.push({ id: 'custom:' + sm.id, name: sm.name, description: `Your map · ${sm.size} × ${sm.size}`, players: Math.min(4, sm.players), custom: true, load: () => decodeMap(sm.text) });
+    }
     let mapIdx = 0;
-    let mapData: MapData = generateMap(MAP_PRESETS[0]);
+    let mapData: MapData = entries[0].load();
     type Slot = { type: 'you' | 'easy' | 'normal' | 'hard' | 'closed'; faction: FactionId | 'random'; team: number; color: number };
     let slots: Slot[] = [];
     const resetSlots = () => {
-      const n = MAP_PRESETS[mapIdx].players;
+      const n = entries[mapIdx].players;
       slots = [];
       for (let i = 0; i < 4; i++) {
         slots.push({ type: i === 0 ? 'you' : i < n ? (i === 1 ? 'normal' : 'normal') : 'closed', faction: i === 0 ? 'crown' : 'random', team: i, color: [1, 0, 2, 4][i] });
@@ -299,19 +308,32 @@ export class MainMenu {
     };
     const renderMaps = () => {
       maplist.innerHTML = '';
-      MAP_PRESETS.forEach((m, i) => {
+      entries.forEach((m, i) => {
+        if (m.custom && (i === 0 || !entries[i - 1].custom)) {
+          const h = document.createElement('div');
+          h.className = 'sk-maps-head';
+          h.textContent = 'Your maps';
+          maplist.appendChild(h);
+        }
         const d = document.createElement('div');
         d.className = 'mapitem' + (i === mapIdx ? ' sel' : '');
         d.innerHTML = `<div class="mn">${esc(m.name)} <span style="color:#a39d8e;font-weight:400">(${m.players})</span></div><div class="md">${esc(m.description)}</div>`;
         d.onclick = () => {
+          try {
+            mapData = entries[i].load();
+          } catch (err) {
+            errorLine.textContent = (err as Error).message;
+            return;
+          }
           mapIdx = i;
-          mapData = generateMap(MAP_PRESETS[i]);
+          errorLine.textContent = '';
           resetSlots();
           renderMaps();
           renderSlots();
           drawPreview();
         };
         maplist.appendChild(d);
+        if (i === mapIdx) requestAnimationFrame(() => d.scrollIntoView({ block: 'nearest' }));
       });
     };
 
@@ -320,7 +342,7 @@ export class MainMenu {
     table.className = 'slots';
     right.appendChild(table);
     const renderSlots = () => {
-      const n = MAP_PRESETS[mapIdx].players;
+      const n = entries[mapIdx].players;
       table.innerHTML = '<tr><th>#</th><th>Player</th><th>Faction</th><th>Team</th><th>Color</th></tr>';
       for (let i = 0; i < n; i++) {
         const s = slots[i];
@@ -403,9 +425,13 @@ export class MainMenu {
     cards.innerHTML = FACTION_IDS.map((f) => `<div class="fcard"><b>${esc(FACTIONS[f].name)}</b>${esc(FACTIONS[f].traits.join(' · '))}</div>`).join('');
     right.appendChild(cards);
 
+    const errorLine = document.createElement('div');
+    errorLine.className = 'sk-error';
+    errorLine.setAttribute('role', 'alert');
+    right.appendChild(errorLine);
     const btns = document.createElement('div');
     btns.className = 'row';
-    btns.style.marginTop = '16px';
+    btns.style.marginTop = '8px';
     btns.style.justifyContent = 'flex-end';
     right.appendChild(btns);
     this.button(btns, 'Back', () => this.showMain()).style.width = '160px';
@@ -413,11 +439,18 @@ export class MainMenu {
       btns,
       'Start Game',
       () => {
-        const n = MAP_PRESETS[mapIdx].players;
+        const n = entries[mapIdx].players;
         const active = slots.slice(0, n).map((s, i) => ({ s, i })).filter((x) => x.s.type !== 'closed');
-        if (active.length < 2) return alert('At least two players are needed.');
+        if (active.length < 2) {
+          errorLine.textContent = 'At least two players are needed. Open a closed slot.';
+          return;
+        }
         const teams = new Set(active.map((x) => x.s.team));
-        if (teams.size < 2) return alert('Players must be on at least two different teams.');
+        if (teams.size < 2) {
+          errorLine.textContent = 'Players must be on at least two different teams.';
+          return;
+        }
+        errorLine.textContent = '';
         const players: PlayerSetup[] = active.map(({ s, i }, k) => ({
           name: s.type === 'you' ? 'You' : `Computer ${k}`,
           faction: s.faction === 'random' ? FACTION_IDS[Math.floor(Math.random() * 4)] : s.faction,
@@ -428,7 +461,7 @@ export class MainMenu {
           start: i,
         }));
         // shuffle AI start positions for variety on 4 player maps
-        this.cb.startSkirmish({ map: mapData, mapId: MAP_PRESETS[mapIdx].id, players, startGold, startLumber, fog, speed: 1 });
+        this.cb.startSkirmish({ map: mapData, mapId: entries[mapIdx].id, players, startGold, startLumber, fog, speed: 1 });
       },
       'btn primary',
     );

@@ -9,6 +9,8 @@ import type { FactionId } from './data/types';
 import type { GameSetup } from './sim/world';
 import { DEFS } from './data/registry';
 import { kill } from './sim/combat';
+import { MapEditor } from './editor/editor';
+import type { MapData } from './sim/map';
 
 // small debugging handle used by the automated browser play-tests
 (window as unknown as { opus: unknown }).opus = { kill, DEFS };
@@ -22,6 +24,19 @@ const audio = new AudioEngine(settings);
 let progress = loadProgress();
 let menu: MainMenu | null = null;
 let session: GameSession | null = null;
+let editor: MapEditor | null = null;
+/** the editor's document while a test game runs, so the editor can resume it */
+let editorResume: { map: MapData; savedId?: string; unsaved: boolean } | null = null;
+
+/** A short notice in the corner of the screen (used instead of blocking dialogs). */
+function notice(text: string): void {
+  const n = document.createElement('div');
+  n.className = 'app-notice';
+  n.setAttribute('role', 'alert');
+  n.textContent = text;
+  app.appendChild(n);
+  setTimeout(() => n.remove(), 7000);
+}
 
 function unlockAudio(): void {
   audio.unlock();
@@ -50,6 +65,8 @@ const TIPS = [
 function showMenu(screen: 'main' | 'campaign' | 'skirmish' = 'main'): void {
   session?.destroy();
   session = null;
+  editor?.destroy();
+  editor = null;
   if (menu) menu.destroy();
   menu = new MainMenu(app, {
     settings,
@@ -65,6 +82,7 @@ function showMenu(screen: 'main' | 'campaign' | 'skirmish' = 'main'): void {
     },
     startSkirmish: (cfg) => startSkirmish(cfg),
     startMission: (id) => briefing(id),
+    openEditor: () => showEditor(),
   });
   if (screen === 'campaign') menu.showCampaign();
   if (screen === 'skirmish') menu.showSkirmish();
@@ -92,8 +110,10 @@ function launch(setup: GameSetup, local: number, title: string, onExit: (won: bo
       (window as unknown as { game: GameSession }).game = session;
     } catch (err) {
       console.error(err);
-      alert('Failed to start the game: ' + (err as Error).message);
+      session?.destroy();
+      session = null;
       showMenu();
+      notice('The game could not start: ' + (err as Error).message);
     } finally {
       l.remove();
     }
@@ -121,6 +141,56 @@ function startSkirmish(cfg: SkirmishConfig): void {
       startSkirmish(cfg);
     },
   );
+}
+
+function showEditor(resume?: { map: MapData; savedId?: string; unsaved: boolean }): void {
+  session?.destroy();
+  session = null;
+  menu?.destroy();
+  menu = null;
+  editor?.destroy();
+  audio.menuMusic();
+  editor = new MapEditor(app, {
+    initial: resume?.map,
+    onExit: () => {
+      editor?.destroy();
+      editor = null;
+      showMenu();
+    },
+    onTest: (map, faction) => {
+      editorResume = editor!.current();
+      editor!.destroy();
+      editor = null;
+      testMap(map, faction);
+    },
+  });
+  if (resume) editor.restoreState(resume.savedId, resume.unsaved);
+  (window as unknown as { editor: MapEditor }).editor = editor;
+}
+
+/** Play the map being edited: you against one Normal computer opponent. */
+function testMap(map: MapData, faction: FactionId): void {
+  const others: FactionId[] = ['crown', 'iron', 'sepulchral', 'twilight'];
+  const setup: GameSetup = {
+    map,
+    seed: Math.floor(Math.random() * 1e9),
+    players: [
+      { name: 'You', faction, color: 1, team: 0, ai: false, difficulty: 'normal', start: 0 },
+      { name: 'Computer', faction: others[Math.floor(Math.random() * 4)], color: 0, team: 1, ai: true, difficulty: 'normal', start: 1 },
+    ],
+  };
+  const back = () => {
+    session?.destroy();
+    session = null;
+    const r = editorResume;
+    editorResume = null;
+    showEditor(r ?? { map, unsaved: true });
+  };
+  launch(setup, 0, 'Map Test — ' + map.name, back, () => {
+    session?.destroy();
+    session = null;
+    testMap(map, faction);
+  });
 }
 
 function briefing(id: string): void {
@@ -230,6 +300,8 @@ if (params.has('quick') || params.has('spectate')) {
   session.renderer.camera.setZoom(Number(params.get('z') || 26));
   session.start();
   (window as unknown as { game: GameSession }).game = session;
+} else if (params.has('editor')) {
+  showEditor(params.get('editor') ? { map: presetMap(params.get('editor')!), unsaved: true } : undefined);
 } else if (params.has('mission')) {
   startMission(params.get('mission')!);
 } else {
