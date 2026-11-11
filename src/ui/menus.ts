@@ -174,6 +174,10 @@ export class MainMenu {
     this.button(m, 'How to Play', () => this.showHelp());
     this.button(m, 'Options', () => this.showOptions());
     this.button(m, 'About', () => this.showAbout());
+    const note = document.createElement('div');
+    note.className = 'small-note';
+    note.textContent = 'Opuscraft is played with a mouse and keyboard. For the best experience, open it on a computer with a window at least 1280 pixels wide.';
+    m.appendChild(note);
     this.layer.appendChild(m);
     const f = document.createElement('div');
     f.className = 'footer';
